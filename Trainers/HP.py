@@ -15,7 +15,7 @@ def loss_schedule(max_epoch):
     return weight
 
 
-models_path = "/home/lhm/vit/camel/model_save/"
-log_dir = "/home/lhm/vit/camel/logs/"
+models_path = "/home/lhm/vit/model_save/"
+log_dir = "/home/lhm/vit/logs/"
 
 temp = 5
