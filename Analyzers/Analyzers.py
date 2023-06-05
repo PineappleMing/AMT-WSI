@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 from torch.utils.tensorboard import SummaryWriter
 
@@ -61,8 +62,25 @@ class CommonAnalyzer:
             range(2)]
         self.label_rate[2] = self._label_count[2].float().mean().item()
 
-    def saveToFile(self, step):
-        pass
+    def saveToFile(self, *, step, mode='train'):
+        self._writer.add_scalar(mode + '/stage1/acc_n', scalar_value=self.acc[0][0],
+                                global_step=step)
+        self._writer.add_scalar(mode + '/stage1/acc_p', scalar_value=self.acc[0][1],
+                                global_step=step)
+        self._writer.add_scalar(mode + '/stage1/patch_acc', scalar_value=self.patch_acc[0],
+                                global_step=step)
+        self._writer.add_scalar(mode + '/stage2/acc_n', scalar_value=self.acc[1][0],
+                                global_step=step)
+        self._writer.add_scalar(mode + '/stage2/acc_p', scalar_value=self.acc[1][1],
+                                global_step=step)
+        self._writer.add_scalar(mode + '/stage2/patch_acc', scalar_value=self.patch_acc[1],
+                                global_step=step)
+        self._writer.add_scalar(mode + '/stage3/acc_n', scalar_value=self.acc[2][0],
+                                global_step=step)
+        self._writer.add_scalar(mode + '/stage3/acc_p', scalar_value=self.acc[2][1],
+                                global_step=step)
+        self._writer.add_scalar(mode + '/stage3/label_rate', scalar_value=self.label_rate[2],
+                                global_step=step)
 
     def print(self, epoch, loss_se):
         print('\nEPOCH: {} STAGE 1: '.format(epoch))

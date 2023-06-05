@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 from Analyzers import CommonAnalyzer
 from dataloader_adapters import CamelonInputTensorAdapter, CamelonTestTensorAdapter
+from dataloader_adapters.BRCA.BRCAInputTensorAdapter import BRCAInputTensorAdapter
 from dataloader_adapters.LUAD.LUADInputTensorAdapter import LUADInputTensorAdapter
+from dataset.medical_brca import Data_BRCA, Data_BRCA_Test
 from dataset.medical_luad import Data_LUAD, Data_LUAD_Test
 from models import *
 from dataset import *
@@ -16,15 +18,15 @@ params['batch_size'] = 4  # 一批次进入的数据大小
 params['lr'] = [0.002, 0.002, 0.01]  # 学习率
 params['lr_attn'] = [0.01, 0.01]
 params['square_size'] = 256
-params['patch_size'] = 32
-params['num_patch'] = 64
-params['num_patch_sqrt'] = 8
-params['gap_size'] = 8  # transformer等级之间间隔的倍数
+params['patch_size'] = 16
+params['num_patch'] = 256
+params['num_patch_sqrt'] = 16
+params['gap_size'] = 16  # transformer等级之间间隔的倍数
 params['num_focus'] = 4  # 取前多少个框
 params['num_class'] = 2
 
-train_dataset = Data_LUAD()
-test_dataset = Data_LUAD_Test()
+train_dataset = Data_BRCA()
+test_dataset = Data_BRCA_Test()
 train_loader = DataLoader(train_dataset,
                           shuffle=True,
                           batch_size=params['batch_size'])
@@ -52,7 +54,7 @@ loss_se = HP.loss_schedule(max_epoch=100)
 
 
 def train(epoch):
-    analyzer = CommonAnalyzer(log_dir=HP.log_dir + '/luad/')
+    analyzer = CommonAnalyzer(log_dir=HP.log_dir + 'brca/')
     model1.train()
     model2.train()
     model3.train()
@@ -63,9 +65,9 @@ def train(epoch):
 
     for train_i, (medical_tag_path, label_path) in enumerate(train_loader):
         global_step = epoch * len(train_loader) + train_i
-        input_adapter = LUADInputTensorAdapter(data_paths=medical_tag_path, label_paths=label_path,
+        input_adapter = BRCAInputTensorAdapter(data_paths=medical_tag_path, label_paths=label_path,
                                                rate=params['gap_size'], num_focus=params['num_focus'],
-                                               num_patch_sqrt=params['num_patch_sqrt'])
+                                               num_patch_sqrt=16)
 
         # ------------------------------------------------------------------------------------------------
         inputs1, stage_one_label, stage_one_patch_label = input_adapter.getStageOneInputTensor()
@@ -167,11 +169,11 @@ def train(epoch):
         analyzer.print(epoch, loss_se[epoch])
         analyzer.saveToFile(step=global_step, mode='train')
         if global_step > 0 and global_step % 200 == 0:
-            torch.save(model1.state_dict(), HP.models_path + 'luad1.pth')
-            torch.save(model2.state_dict(), HP.models_path + 'luad2.pth')
-            torch.save(model3.state_dict(), HP.models_path + 'luad3.pth')
-            torch.save(attn_clsfr1.state_dict(), HP.models_path + 'luad_atten1.pth')
-            torch.save(attn_clsfr2.state_dict(), HP.models_path + 'luad_atten2.pth')
+            torch.save(model1.state_dict(), HP.models_path + 'brca1.pth')
+            torch.save(model2.state_dict(), HP.models_path + 'brca2.pth')
+            torch.save(model3.state_dict(), HP.models_path + 'brca3.pth')
+            torch.save(attn_clsfr1.state_dict(), HP.models_path + 'brca_atten1.pth')
+            torch.save(attn_clsfr2.state_dict(), HP.models_path + 'brca_atten2.pth')
 
 
 def test(epoch):
@@ -180,9 +182,8 @@ def test(epoch):
     model3.eval()
     analyzer = CommonAnalyzer(log_dir=HP.log_dir)
     for train_i, (medical_tag_path, label_path) in enumerate(test_loader):
-        input_adapter = LUADInputTensorAdapter(data_paths=medical_tag_path, label_paths=label_path,
-                                               rate=params['gap_size'], num_focus=params['num_focus'],
-                                               num_patch_sqrt=params['num_patch_sqrt'])
+        input_adapter = CamelonTestTensorAdapter(data_paths=medical_tag_path, label_paths=label_path,
+                                                 rate=params['gap_size'], num_focus=params['num_focus'])
         # ------------------------------------------------------------------------------------------------
         inputs1, stage_one_label, stage_one_patch_label = input_adapter.getStageOneInputTensor()
         stage_one_out, stage_one_fea, stage_one_class, attn = model1(inputs1)

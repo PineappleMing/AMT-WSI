@@ -19,13 +19,19 @@ class Data_BRCA(Dataset):
         self.img_path = '/nfs3-p1/lhm/BRCA/s256/'
         self.data_arr = os.listdir(self.train_path)
         self.img_arr = os.listdir(self.img_path)
+        self.uid_arr = []
         self.label_arr = np.load(self.label_path, allow_pickle=True).item()
+        for i in self.img_arr:
+            uid = i.split('.')[0]
+            if uid in list(self.label_arr.keys()):
+                self.uid_arr.append(uid)
+        print(len(self.img_arr), len(self.uid_arr))
 
     def __len__(self):
-        return len(self.img_arr)
+        return len(self.uid_arr)
 
     def __getitem__(self, index):
-        uuid = self.img_arr[index].split('.')[0]
+        uuid = self.uid_arr[index]
         return uuid, self.label_arr[uuid]
 
 
@@ -36,45 +42,17 @@ class Data_BRCA_Test(Dataset):
         self.label_path = "/nfs3/yuxiaotian/BRCA/u2l.npy"
         self.img_path = '/nfs3-p1/lhm/BRCA/s256/'
         self.data_arr = os.listdir(self.train_path)
-        self.img_arr = os.listdir(self.img_path)[:80]
+        self.img_arr = os.listdir(self.img_path)[600:]
+        self.uid_arr = []
         self.label_arr = np.load(self.label_path, allow_pickle=True).item()
+        for i in self.img_arr:
+            uid = i.split('.')[0]
+            if uid in list(self.label_arr.keys()):
+                self.uid_arr.append(uid)
 
     def __len__(self):
-        return len(self.img_arr)
+        return len(self.uid_arr)
 
     def __getitem__(self, index):
-        uuid = self.img_arr[index].split('.')[0]
+        uuid = self.uid_arr[index]
         return uuid, self.label_arr[uuid]
-
-
-if __name__ == '__main__':
-    train_slide_path = '/nfs/yuxiaotian/CAMELYON16/training'
-    normal_ctg = glob.glob(os.path.join(train_slide_path, "slide/normal", "normal_*.tif.invalid"))
-    tumor_ctg = glob.glob(os.path.join(train_slide_path, "slide/tumor", "tumor-*.tif.tif"))
-    for j in normal_ctg:
-        j_tag = j.split(".tif.invalid")[0] + '.tif'
-        os.system(
-            'mv {} {}'.format(j, j_tag))
-
-    # data = MyData('')
-    # medical_size = []
-    # medical_invalid = []
-    # scale = [6,7,8,9]
-    #
-    # for i in range(235):
-    #     a, b = data[i]
-    #     for j in scale:
-    #         try:
-    #             slide = openslide.OpenSlide(a)
-    #             height, width = slide.level_dimensions[j]
-    #             tick = 'class' + str(j) + 'is valid' + 'size is:' + str(height) +',width:' + str(width)
-    #             medical_size.append(tick)
-    #             print(a, ':valid')
-    #         except:
-    #             tick = a + ',class' + str(j)  + 'is invalid'
-    #             medical_size.append(tick)
-    #             print(a,':invalid')
-    #
-    # with open('./result_2.txt','w',encoding="utf-8") as fp:
-    #     for k in medical_size:
-    #         fp.write(k+'\n')

@@ -16,7 +16,7 @@ t_eval = transforms.Compose([
 ])
 
 
-class LUADInputTensorAdapter(InputTensorAdapter):
+class BRCAInputTensorAdapter(InputTensorAdapter):
     __slots__ = ['labels']
 
     def __init__(self, data_paths: list, label_paths: list, rate: int = 8, num_focus: int = 4,
@@ -28,14 +28,14 @@ class LUADInputTensorAdapter(InputTensorAdapter):
         slide_all = []
         for uuid in self.data_paths:
             try:
-                img_name = "/nfs3-p1/lhm/LUAD/s64/" + uuid + '.png'
+                img_name = "/nfs3-p1/lhm/BRCA/s256/" + uuid + '.png'
                 img = cv2.imread(img_name)
                 slide_all.append(t_eval(img).unsqueeze(0))
             except Exception as E:
                 print(uuid, "is invalid", E)
         inputs1 = torch.cat(slide_all, dim=0).float().to(self.device)  # [16,3,256,256]
         stage_one_label_all = self.labels.to(self.device)
-        stage_one_label = self.labels.unsqueeze(1).repeat(1, 64).to(self.device)
+        stage_one_label = self.labels.unsqueeze(1).repeat(1, self.num_patch_sqrt * self.num_patch_sqrt).to(self.device)
         return inputs1, stage_one_label_all, stage_one_label
 
     def getStageTwoInputTensor(self, focus_index) -> (Tensor, Tensor, Tensor):
@@ -46,7 +46,7 @@ class LUADInputTensorAdapter(InputTensorAdapter):
 
         for i, uuid in enumerate(self.data_paths):
             try:
-                img16 = cv2.imread("/nfs3-p1/lhm/LUAD/s8/" + uuid + '.png')
+                img16 = cv2.imread("/nfs3-p1/lhm/BRCA/s16/" + uuid + '.png')
                 x_1 = focus_index[i] % self.num_patch_sqrt
                 y_1 = focus_index[i] // self.num_patch_sqrt
                 size_1 = 256
@@ -70,7 +70,7 @@ class LUADInputTensorAdapter(InputTensorAdapter):
                                             dtype=torch.long).to(self.device)
         for i, uuid in enumerate(self.data_paths):
             try:
-                slide_name = glob.glob('/nfs3-p1/yuxiaotian/LUAD/slide/' + uuid + '/*.svs*')[0]
+                slide_name = glob.glob('/nfs3-p1/yuxiaotian/BRCA/slide/' + uuid + '/*.svs*')[0]
                 slide = openslide.OpenSlide(slide_name)
                 W, H = slide.level_dimensions[0]
                 ori_x = W // 2 - 65536 // 2

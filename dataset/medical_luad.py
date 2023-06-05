@@ -41,7 +41,7 @@ class Data_LUAD_Test(Dataset):
         self.label_path = "/nfs3-p1/yuxiaotian/LUAD/u2l.npy"
         self.img_path = '/nfs3-p1/lhm/LUAD/s64/'
         self.data_arr = os.listdir(self.train_path)
-        self.img_arr = os.listdir(self.img_path)[:40]
+        self.img_arr = os.listdir(self.img_path)[1000:]
         self.uid_arr = []
         self.label_arr = np.load(self.label_path, allow_pickle=True).item()
         for i in self.img_arr:
