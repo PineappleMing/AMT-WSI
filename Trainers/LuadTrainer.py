@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from torch.utils.tensorboard import SummaryWriter
+
 from Analyzers import CommonAnalyzer
 from dataloader_adapters import CamelonInputTensorAdapter, CamelonTestTensorAdapter
 from dataloader_adapters.LUAD.LUADInputTensorAdapter import LUADInputTensorAdapter
@@ -50,9 +52,11 @@ opt_attn = torch.optim.SGD([{'params': attn_clsfr1.parameters(), 'lr': params['l
                             {'params': attn_clsfr2.parameters(), 'lr': params['lr_attn'][1]}])
 loss_se = HP.loss_schedule(max_epoch=100)
 
+writer = SummaryWriter(log_dir=HP.log_dir + '/luad/')
+
 
 def train(epoch):
-    analyzer = CommonAnalyzer(log_dir=HP.log_dir + '/luad/')
+    analyzer = CommonAnalyzer(writer)
     model1.train()
     model2.train()
     model3.train()

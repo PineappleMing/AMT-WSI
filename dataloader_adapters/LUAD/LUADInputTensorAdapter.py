@@ -73,8 +73,8 @@ class LUADInputTensorAdapter(InputTensorAdapter):
                 slide_name = glob.glob('/nfs3-p1/yuxiaotian/LUAD/slide/' + uuid + '/*.svs*')[0]
                 slide = openslide.OpenSlide(slide_name)
                 W, H = slide.level_dimensions[0]
-                ori_x = W // 2 - 65536 // 2
-                ori_y = H // 2 - 65536 // 2
+                ori_x = W // 2 - 256 * self.rate * self.rate // 2
+                ori_y = H // 2 - 256 * self.rate * self.rate // 2
                 x_1 = focus_index1[i] % self.num_patch_sqrt
                 y_1 = focus_index1[i] // self.num_patch_sqrt
                 x_2 = focus_index2 % self.num_patch_sqrt

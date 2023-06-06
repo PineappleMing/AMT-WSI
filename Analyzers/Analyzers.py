@@ -7,9 +7,9 @@ class CommonAnalyzer:
     __slots__ = ['_writer', '_label_count', '_pred_count', '_patch_hit', '_patch_total', 'acc', 'label_rate',
                  'patch_acc']
 
-    def __init__(self, log_dir: str):
+    def __init__(self, writter):
         super().__init__()
-        self._writer = SummaryWriter(log_dir=log_dir)
+        self._writer = writter
         self._label_count = [torch.tensor([]).long()] * 3
         self._pred_count = [torch.tensor([]).long()] * 3
         self._patch_hit = [0.] * 3
