@@ -2,8 +2,8 @@ import numpy as np
 
 
 def loss_schedule(max_epoch):
-    start_2 = int(0.2 * max_epoch)
-    start_3 = int(0.4 * max_epoch)
+    start_2 = int(0.4 * max_epoch)
+    start_3 = int(0.6 * max_epoch)
     duration = int(0.5 * max_epoch)
 
     weight_1 = [[[1.0, 1.0, (epoch - start_2) / duration, (epoch - start_2) / duration]] for epoch in range(max_epoch)]

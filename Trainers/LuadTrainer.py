@@ -13,7 +13,7 @@ import HP as HP
 from losses import *
 
 params = {}  # 初始参数设计
-params['num_epoch'] = 100  # 训练的轮数
+params['num_epoch'] = 200  # 训练的轮数
 params['batch_size'] = 4  # 一批次进入的数据大小
 params['lr'] = [0.002, 0.002, 0.01]  # 学习率
 params['lr_attn'] = [0.01, 0.01]
@@ -50,7 +50,7 @@ opt_cls = torch.optim.SGD([{'params': model1.parameters(), 'lr': params['lr'][0]
                            {'params': model3.parameters(), 'lr': params['lr'][2]}])
 opt_attn = torch.optim.SGD([{'params': attn_clsfr1.parameters(), 'lr': params['lr_attn'][0]},
                             {'params': attn_clsfr2.parameters(), 'lr': params['lr_attn'][1]}])
-loss_se = HP.loss_schedule(max_epoch=100)
+loss_se = HP.loss_schedule(max_epoch=params['num_epoch'])
 
 writer = SummaryWriter(log_dir=HP.log_dir + '/luad/')
 
@@ -106,7 +106,8 @@ def train(epoch):
             stage_two_patch_label = stage_two_patch_label.reshape(B * params['num_focus'], -1)
             stage_two_label = stage_two_label.reshape(B * params['num_focus'])
             stage_two_class = stage_two_class.reshape(B * params['num_focus'], 2)
-            loss_stage_two_all = criterion2(stage_two_class, stage_two_label)
+            # loss_stage_two_all = criterion2(stage_two_class, stage_two_label)
+            loss_stage_two_all = GCELoss(stage_two_class, stage_two_label, weight=weight2)
             analyzer.updateStageTwo(stage_two_label, stage_two_class, stage_two_patch_label, stage_two_fine_index)
             weight2 = torch.clamp(torch.tensor([analyzer.label_rate[1] / (1.01 - analyzer.label_rate[1]), 1.]), min=0.1,
                                   max=1.0)
@@ -119,7 +120,8 @@ def train(epoch):
             stage_three_label = stage_three_label.reshape(B * params['num_focus'] * params['num_focus'])
             stage_three_class = stage_three_class.reshape(B * params['num_focus'] * params['num_focus'], 2)
             criterion3 = nn.CrossEntropyLoss(weight=weight3).to(device)
-            loss_stage_three_all = criterion3(stage_three_class, stage_three_label)
+            # loss_stage_three_all = criterion3(stage_three_class, stage_three_label)
+            loss_stage_three_all = GCELoss(stage_three_class, stage_three_label, weight=weight3)
             analyzer.updateStageThree(stage_three_label, stage_three_class)
             weight3 = torch.clamp(torch.tensor([analyzer.label_rate[2] / (1.01 - analyzer.label_rate[2]), 1.]), min=0.1,
                                   max=1.0)
