@@ -142,7 +142,7 @@ def train(epoch):
             stage_three_class = stage_three_class.reshape(B * params['num_focus'] * params['num_focus'], 2)
             criterion3 = nn.CrossEntropyLoss(weight=weight3).to(device)
             loss_stage_three_all = criterion3(stage_three_class, stage_three_label)
-            loss_stage_three_all = GCELoss(stage_three_class, stage_three_label, weight=weight3)
+            # loss_stage_three_all = GCELoss(stage_three_class, stage_three_label, weight=weight3)
             analyzer.updateStageThree(stage_three_true_label, stage_three_class)
             weight3 = torch.clamp(torch.tensor([analyzer.label_rate[2] / (1.01 - analyzer.label_rate[2]), 1.]), min=0.1,
                                   max=1.0)
@@ -236,6 +236,7 @@ def test(epoch):
             stage_two_fine_index)
         stage_three_out, stage_three_fea, stage_three_class, attn = model3(inputs3)
         stage_three_label = stage_three_label.reshape(B * params['num_focus'] * params['num_focus'])
+        stage_three_true_label = stage_three_true_label.reshape(B * params['num_focus'] * params['num_focus'])
         stage_three_class = stage_three_class.reshape(B * params['num_focus'] * params['num_focus'], 2)
         analyzer.updateStageThree(stage_three_true_label, stage_three_class)
         analyzer.print(epoch, loss_se[epoch])
