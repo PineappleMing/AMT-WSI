@@ -15,7 +15,7 @@ def loss_schedule(max_epoch):
     return weight
 
 
-models_path = "/home/lhm/vit/model_save/"
-log_dir = "/home/lhm/vit/logs/"
+models_path = "/nfs3-p1/lhm/model_save/"
+log_dir = "/nfs3-p1/lhm/log/"
 
 temp = 5
