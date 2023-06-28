@@ -44,7 +44,7 @@ class CommonAnalyzer:
             (((self._pred_count[1] == self._label_count[1]) & (self._label_count[1] == cls)).float().sum() / (
                     self._label_count[1] == cls).float().sum()).item() // 0.0001 / 100 for cls in
             range(2)]
-        self.label_rate[1] = self._label_count[0].float().mean().item()
+        self.label_rate[1] = self._label_count[1].float().mean().item()
         for b in range(K):
             if label[b] == 1:
                 self._patch_hit[1] += (patch_label[b][fine_index[b]] == 1).sum()

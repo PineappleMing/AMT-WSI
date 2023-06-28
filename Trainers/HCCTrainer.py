@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+import cv2
+import numpy as np
+from PIL import Image
 from torch.utils.tensorboard import SummaryWriter
 
 from Analyzers import CommonAnalyzer
@@ -13,7 +16,7 @@ import HP as HP
 from losses import *
 
 params = {}  # 初始参数设计
-params['num_epoch'] = 500  # 训练的轮数
+params['num_epoch'] = 600  # 训练的轮数
 params['batch_size'] = 4  # 一批次进入的数据大小
 params['lr'] = [0.002, 0.002, 0.01]  # 学习率
 params['lr_attn'] = [0.01, 0.01]
@@ -40,10 +43,10 @@ model3 = medical_former(channel=3, patch_size=16, dim=384, num_heads=10).to(devi
 attn_clsfr1 = Mlp(in_features=384, hidden_features=192, out_features=1).to(device)
 attn_clsfr2 = Mlp(in_features=384, hidden_features=192, out_features=1).to(device)
 model1.load_state_dict(torch.load(HP.models_path + 'hcc1.pth'))
-# model2.load_state_dict(torch.load(HP.models_path + 'hcc2.pth'))
-# model3.load_state_dict(torch.load(HP.models_path + 'hcc3.pth'))
-# attn_clsfr1.load_state_dict(torch.load(HP.models_path + 'hcc_atten1.pth'))
-# attn_clsfr2.load_state_dict(torch.load(HP.models_path + 'hcc_atten2.pth'))
+model2.load_state_dict(torch.load(HP.models_path + 'hcc2.pth'))
+model3.load_state_dict(torch.load(HP.models_path + 'hcc3.pth'))
+attn_clsfr1.load_state_dict(torch.load(HP.models_path + 'hcc_atten1.pth'))
+attn_clsfr2.load_state_dict(torch.load(HP.models_path + 'hcc_atten2.pth'))
 
 opt_cls = torch.optim.SGD([{'params': model1.parameters(), 'lr': params['lr'][0]},
                            {'params': model2.parameters(), 'lr': params['lr'][1]},
@@ -52,6 +55,17 @@ opt_attn = torch.optim.SGD([{'params': attn_clsfr1.parameters(), 'lr': params['l
                             {'params': attn_clsfr2.parameters(), 'lr': params['lr_attn'][1]}])
 loss_se = HP.loss_schedule(max_epoch=params['num_epoch'])
 writer = SummaryWriter(log_dir=HP.log_dir + 'hcc/')
+
+
+def save_focus_map(score, pth, norm=True, target_size=256):
+    N = score.shape[0]
+    N_sqrt = int(np.sqrt(N))
+    score = nn.Sigmoid()(score).detach().cpu().numpy()
+    if norm:
+        score = (score - score.min()) / (score.max() - score.min())
+    score = (score * 255).astype(np.uint8)
+    focus_map = Image.fromarray(score.reshape(N_sqrt, N_sqrt)).resize((target_size, target_size))
+    focus_map.save(pth)
 
 
 def train(epoch):
@@ -82,6 +96,36 @@ def train(epoch):
         value, stage_one_index = torch.sort(stage_one_attention, 1, descending=False)
         stage_one_fine_index = stage_one_index[:, -params['num_focus']:].detach()
         forward_attention_loss1 = forward_attention(stage_one_attention, g_attn1, stage_one_label)
+        # for i in range(params['batch_size']):
+        #     slide_name = medical_tag_path[i].split('/')[-1].split('.')[0]
+        #     dataset = medical_tag_path[i].split('/')[-2]
+        #     img16 = cv2.imread('/nfs3/lhm/HCC/s16/' + dataset + '/' + slide_name + '.png')
+        #     flag = 0
+        #     create_green = np.zeros((256, 256, 3), dtype=np.uint8)
+        #     create_green[:, :, 0] = 0
+        #     create_green[:, :, 1] = 255
+        #     create_green[:, :, 2] = 0
+        #     for j in range(params['num_focus']):
+        #         index = stage_one_fine_index[i][j].cpu().item()
+        #         x, y = index % 16, index // 16
+        #         label_index = stage_one_patch_label[i].cpu()
+        #         cv2.rectangle(img16, (x * 256, y * 256), (
+        #             x * 256 + 256, y * 256 + 256), (0, 255, 0),
+        #                       3)
+        #         img_add = cv2.addWeighted(img16[y * 256:y * 256 + 256, x * 256:x * 256 + 256], 0.7, create_green, 0.3,
+        #                                   0)
+        #         img16[y * 256:y * 256 + 256, x * 256:x * 256 + 256] = img_add
+        #         for k in range(256):
+        #             cordx, cordy = k % 16, k // 16
+        #             if label_index[k] == 1:
+        #                 flag = 1
+        #                 cv2.rectangle(img16, (cordx * 256, cordy * 256), (
+        #                     cordx * 256 + 256, cordy * 256 + 256), (255, 0, 0),
+        #                               5)
+        #     if flag:
+        #         cv2.imwrite("/home/lhm/tmp/hcc/" + slide_name + '.png', img16)
+        #         # save_focus_map(stage_one_attention[i].cpu(), "/home/lhm/tmp/hcc/" + slide_name + '_atten.png')
+        #         print(f'write {"/home/lhm/tmp/hcc/" + slide_name + "_atten.png"}')
         criterion1 = nn.CrossEntropyLoss(weight=weight1).to(device)
         loss_stage_one_all = criterion1(stage_one_class, stage_one_label)
         analyzer.updateStageOne(stage_one_label, stage_one_class, stage_one_patch_label, stage_one_fine_index)
@@ -215,5 +259,7 @@ def test(epoch):
 
 
 for epoch in range(params['num_epoch']):
+    if epoch < 400:
+        continue
     train(epoch)
     # test(epoch)
