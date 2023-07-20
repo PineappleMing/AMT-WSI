@@ -16,6 +16,6 @@ def loss_schedule(max_epoch):
 
 
 models_path = "/nfs3-p1/lhm/model_save/"
-log_dir = "/nfs3-p1/lhm/log/"
+log_dir = "/home/lhm/Vit/logs/"
 
 temp = 5

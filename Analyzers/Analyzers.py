@@ -1,15 +1,13 @@
-import numpy as np
 import torch
-from torch.utils.tensorboard import SummaryWriter
 
 
 class CommonAnalyzer:
     __slots__ = ['_writer', '_label_count', '_pred_count', '_patch_hit', '_patch_total', 'acc', 'label_rate',
                  'patch_acc']
 
-    def __init__(self, writter):
+    def __init__(self, writer):
         super().__init__()
-        self._writer = writter
+        self._writer = writer
         self._label_count = [torch.tensor([]).long()] * 3
         self._pred_count = [torch.tensor([]).long()] * 3
         self._patch_hit = [0.] * 3
@@ -30,9 +28,8 @@ class CommonAnalyzer:
         self.label_rate[0] = self._label_count[0].float().mean().item()
         B, num_focus = fine_index.shape
         for b in range(B):
-            if label[b] == 1:
-                self._patch_hit[0] += (patch_label[b][fine_index[b]] == 1).sum()
-                self._patch_total[0] += num_focus
+            self._patch_hit[0] += (patch_label[b][fine_index[b]] == 1).sum()
+            self._patch_total[0] += num_focus
         self.patch_acc[0] = self._patch_hit[0] / (self._patch_total[0] + 0.01)
 
     def updateStageTwo(self, label, pred, patch_label, fine_index):
@@ -46,9 +43,8 @@ class CommonAnalyzer:
             range(2)]
         self.label_rate[1] = self._label_count[1].float().mean().item()
         for b in range(K):
-            if label[b] == 1:
-                self._patch_hit[1] += (patch_label[b][fine_index[b]] == 1).sum()
-                self._patch_total[1] += num_focus
+            self._patch_hit[1] += (patch_label[b][fine_index[b]] == 1).sum()
+            self._patch_total[1] += num_focus
         self.patch_acc[1] = self._patch_hit[1] / (self._patch_total[1] + 0.01)
 
     def updateStageThree(self, label, pred):

@@ -13,7 +13,7 @@ class InputTensorAdapter(ABC):
                  'num_patch_sqrt']
 
     def __init__(self, data_paths: list, label_paths: list, rate: int = 8,
-                 num_focus: int = 4, num_patch_sqrt: int = 16) -> None:
+                 num_focus: int = 4, num_patch_sqrt: int = 16, device='cuda:0') -> None:
         '''
         :param data_paths:dataloader产生的一批数据路径
         :param label_paths: dataloader产生的一批标签路径
@@ -24,7 +24,7 @@ class InputTensorAdapter(ABC):
         self.data_paths = data_paths
         self.label_paths = label_paths
         self.rate = rate
-        self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+        self.device = torch.device(device if torch.cuda.is_available() else 'cpu')
         self.num_focus = num_focus
         self.num_patch_sqrt = num_patch_sqrt
 

@@ -37,8 +37,7 @@ torch.multiprocessing.set_sharing_strategy('file_system')
 import models.vision_transformer as vits
 
 
-
-def get_vit256(pretrained_weights, patch_size=16, arch='vit_small', device=torch.device('cuda:0')):
+def get_vit256(pretrained_weights, patch_size=16, arch='vit_small', device=torch.device('cuda:0'), depth=12):
     r"""
     Builds ViT-256 Model.
 
@@ -54,7 +53,7 @@ def get_vit256(pretrained_weights, patch_size=16, arch='vit_small', device=torch
     checkpoint_key = 'teacher'
     # device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
     device = torch.device("cpu")
-    model256 = vits.__dict__[arch](patch_size=patch_size, num_classes=0)
+    model256 = vits.__dict__[arch](patch_size=patch_size, num_classes=0, depth=depth)
     # for p in model256.parameters():
     #     p.requires_grad = False
     # model256.eval()
@@ -75,9 +74,6 @@ def get_vit256(pretrained_weights, patch_size=16, arch='vit_small', device=torch
         print('Pretrained weights found at {} and loaded with msg: {}'.format(pretrained_weights, msg))
 
     return model256
-
-
-
 
 
 def eval_transforms():
