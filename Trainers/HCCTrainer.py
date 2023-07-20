@@ -1,22 +1,18 @@
 # -*- coding: utf-8 -*-
 import datetime
 import os
-import time
+import sys
 
-import cv2
 import numpy as np
-import torch
 from PIL import Image
 from torch.utils.tensorboard import SummaryWriter
-import sys
 
 sys.path.append('/home/lhm/Vit/AMT/')
 from Analyzers.Analyzers import CommonAnalyzer
 from dataloader_adapters.HCC.HCCInputTensorAdapter import HCCInputTensorAdapter
 from dataset.medical_hcc import Data_HCC, Data_HCC_Test
 from models import *
-from dataset import *
-from torch.utils.data import Dataset, DataLoader  # 数据包
+from torch.utils.data import DataLoader  # 数据包
 from models.medical_vit import Mlp
 import HP as HP
 from losses import *
@@ -115,7 +111,8 @@ def train(epoch):
         g_attn1 = g_attn1.sum(dim=(1, 2))[:, 1:]
         value, stage_one_index = torch.sort(stage_one_attention, 1, descending=False)
         stage_one_fine_index = stage_one_index[:, -params['num_focus']:].detach()
-        forward_attention_loss1 = forward_attention(stage_one_attention, g_attn1, stage_one_label, stage_one_patch_mask)
+        forward_attention_loss1 = forward_attention(stage_one_attention, g_attn1, stage_one_patch_label,
+                                                    stage_one_patch_mask)
 
         # for i in range(params['batch_size']):
         #     slide_name = medical_tag_path[i].split('/')[-1].split('.')[0]
@@ -168,7 +165,7 @@ def train(epoch):
             g_attn2 = g_attn2.sum(dim=(1, 2))[:, 1:]
             value, stage_two_index = torch.sort(stage_two_attention, 1, descending=False)
             stage_two_fine_index = stage_two_index[:, -params['num_focus']:].detach()
-            forward_attention_loss2 = forward_attention(stage_two_attention, g_attn2, stage_two_label,
+            forward_attention_loss2 = forward_attention(stage_two_attention, g_attn2, stage_two_patch_label,
                                                         stage_two_patch_mask)
             criterion2 = nn.CrossEntropyLoss(weight=weight2).to(device)
             stage_two_patch_label = stage_two_patch_label.reshape(B * params['num_focus'], -1)

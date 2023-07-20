@@ -129,12 +129,12 @@ def forward_attention_to_label(p_attn, patch_labels):
 def forward_attention(p_attn, g_attn, patch_labels, mask):
     p_attn = nn.Sigmoid()(p_attn)
     g_attn = g_attn.detach()
+    g_attn = g_attn.masked_fill(~mask, 0)
     patch_labels = patch_labels.float()
     g_max = g_attn.max(dim=1)[0].unsqueeze(1)
     g_min = g_attn.min(dim=1)[0].unsqueeze(1)
     g_attn = (g_attn - g_min) / (g_max - g_min)
-    # attn_target = torch.sqrt(g_attn * patch_labels)
-    attn_target = g_attn.masked_fill(~mask, 0)
+    attn_target = g_attn
     kl = attn_target * torch.log(attn_target / (p_attn + 1e-6) + 1e-6) + (1 - attn_target) * torch.log(
         (1 - attn_target) / (1 - p_attn + 1e-6) + 1e-6)
     return kl.mean()
